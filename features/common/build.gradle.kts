@@ -4,8 +4,8 @@ plugins {
 }
 
 android {
-    namespace = "com.kashapovrush.features"
-    compileSdk = 33
+    namespace = "com.kashapovrush.common"
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 24
