@@ -1,4 +1,4 @@
-package com.kashapovrush.api.modelDto
+package com.kashapovrush.network_api.entity
 
 data class User(
     val login: String? = null,

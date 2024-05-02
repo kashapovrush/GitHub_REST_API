@@ -35,13 +35,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.navigation.AppNavGraph
+import com.example.navigation.rememberNavigationState
 import com.kashapovrush.githubrestapi.ui.theme.GitHubRESTAPITheme
+import com.kashapovrush.repository_user.ui.UserInfoScreen
 import com.kashapovrush.repository_user.viewmodel.UserInfoViewModel
+import com.kashapovrush.search_repository_sreen.ui.SearchRepositoryScreen
 import com.kashapovrush.search_repository_sreen.viewmodel.SearchRepositoriesViewModel
+import com.kashapovrush.util.ViewModelFactory
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
@@ -63,20 +67,20 @@ class MainActivity : ComponentActivity() {
             val userInfoViewModel: UserInfoViewModel = viewModel(factory = viewModelFactory)
             GitHubRESTAPITheme {
 
-//                val navigationState = rememberNavigationState()
-//
-//                AppNavGraph(
-//                    navHostController = navigationState.navHostController,
-//                    searchRepositoriesContent = {
-//                        SearchRepositoryScreen(
-//                            viewModel = searchRepositoriesViewModel,
-//                            navigationState = navigationState
-//                        )
-//                    },
-//                    userInfoContent = { login ->
-//                        UserInfoScreen(userInfoViewModel, login)
-//                    })
-                TestTwo()
+                val navigationState = rememberNavigationState()
+
+                AppNavGraph(
+                    navHostController = navigationState.navHostController,
+                    searchRepositoriesContent = {
+                        SearchRepositoryScreen(
+                            viewModel = searchRepositoriesViewModel,
+                            navigationState = navigationState
+                        )
+                    },
+                    userInfoContent = { login ->
+                        UserInfoScreen(userInfoViewModel, login)
+                    })
+//                TestTwo()
             }
         }
     }

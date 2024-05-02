@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -42,7 +43,9 @@ import kotlinx.coroutines.launch
 fun UserInfoScreen(viewModel: UserInfoViewModel, login: String) {
     Log.d("MainActivityTest", "RECOMPOSITION")
 
-    CoroutineScope(Dispatchers.IO).launch {
+    val scope = rememberCoroutineScope()
+
+    scope.launch {
         viewModel.getUser(login = login)
     }
 
@@ -113,7 +116,9 @@ private fun ContentUser(
         Text(
             text = currentStateUser.user.bio ?: "",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.fillMaxWidth().padding(24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
         )
     }
 }

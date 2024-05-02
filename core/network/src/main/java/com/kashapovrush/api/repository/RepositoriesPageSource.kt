@@ -1,14 +1,14 @@
-package com.kashapovrush.search_repository_sreen.ui
-
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
-import com.kashapovrush.api.modelDto.SearchItem
-import com.kashapovrush.api.network.ApiService
-import javax.inject.Inject
-
-class RepositoriesPageSource @Inject constructor(
-    private val apiService: ApiService
-) {
+//package com.kashapovrush.api.repository
+//
+//import androidx.paging.PagingState
+//import com.kashapovrush.api.network.ApiService
+//import com.kashapovrush.network_api.entity.SearchItem
+//import javax.inject.Inject
+//
+//class RepositoriesPageSource @Inject constructor(
+//    private val apiService: ApiService,
+//    private val query: String
+//) {
 //    override fun getRefreshKey(state: PagingState<Int, SearchItem>): Int? {
 ////        return state.anchorPosition
 //        return null
@@ -30,4 +30,4 @@ class RepositoriesPageSource @Inject constructor(
 ////        }
 //        return null
 //    }
-}
+//}

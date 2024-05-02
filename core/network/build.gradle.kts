@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation(project(":core:util"))
+    implementation(project(":core:network:network-api"))
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
