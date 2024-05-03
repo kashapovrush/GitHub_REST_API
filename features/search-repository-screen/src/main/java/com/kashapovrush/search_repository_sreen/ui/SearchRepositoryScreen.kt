@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -27,13 +27,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,13 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.example.navigation.NavigationState
 import com.kashapovrush.network_api.entity.SearchItem
 import com.kashapovrush.search_repository_sreen.viewmodel.SearchRepositoriesViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -56,7 +53,6 @@ fun SearchRepositoryScreen(
     viewModel: SearchRepositoriesViewModel,
     navigationState: NavigationState
 ) {
-    val scope = CoroutineScope(Dispatchers.IO)
 
     val text = remember {
         mutableStateOf("")
@@ -66,63 +62,86 @@ fun SearchRepositoryScreen(
         mutableStateOf(false)
     }
 
-    val state = viewModel.screenState.observeAsState()
-    val currentScreenState = state.value
+    val state = viewModel.searchRepositories(text.value).collectAsLazyPagingItems()
+
     Column {
-        SetSearchBar(text, active) {
-            scope.launch {
-                viewModel.searchRepositories(text.value)
+        SetSearchBar(text, active)
+
+        LazyColumn {
+            items(count = state.itemCount) {
+                val item = state[it]
+                RepositoryItem(item = item) {
+                    navigationState.navigateToUserInfo(item?.login ?: "")
+                }
             }
-        }
 
-        Scaffold(
-            content = { paddingValues ->
-                when (currentScreenState) {
-                    is ScreenState.Loading -> {
-                        Loading(paddingValues = paddingValues)
+            when(val currentState = state.loadState.refresh) {
+                is LoadState.Error -> {
+                    item {
+                        Error(currentState.error.message)
                     }
-
-                    is ScreenState.Error -> {
-                        Error(error = currentScreenState.message ?: "")
+                }
+                LoadState.Loading -> {
+                    item {
+                        LoadingResult()
                     }
+                }
+                is LoadState.NotLoading -> Unit
+            }
 
-                    is ScreenState.ShowResult -> {
-                        ContentResult(currentScreenState, navigationState)
-                    }
-
-                    ScreenState.Initial -> {
-
-                    }
-
-                    null -> {
-
+            when (state.loadState.append) {
+                is LoadState.Error -> {}
+                LoadState.Loading -> {
+                    item {
+                        LoadingPage()
                     }
                 }
 
-            }, bottomBar = {
-                SetBottomBar()
-            })
+                is LoadState.NotLoading -> Unit
+            }
+        }
+
     }
 }
 
 @Composable
-fun Error(error: String) {
+fun ShowLoading() {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun Error(error: String?) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Text(text = error)
+        Text(text = error ?: "Some error")
     }
 }
 
 @Composable
-fun Loading(paddingValues: PaddingValues) {
+fun LoadingResult() {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues = paddingValues)
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .width(48.dp)
+                .height(48.dp)
+        )
+    }
+}
+
+@Composable
+fun LoadingPage() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
     ) {
         CircularProgressIndicator(
             modifier = Modifier
@@ -161,7 +180,10 @@ private fun SetBottomBar() {
 
 
 @Composable
-fun ContentResult(state: ScreenState.ShowResult, navigationState: NavigationState) {
+fun ContentResult(
+    state: ScreenState.ShowResult,
+    navigationState: NavigationState
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(items = state.repositories, key = { it.id }) {
             Log.d("MainActivityTest", "item $it")
@@ -173,7 +195,7 @@ fun ContentResult(state: ScreenState.ShowResult, navigationState: NavigationStat
 }
 
 @Composable
-fun RepositoryItem(item: SearchItem, navigateToUserInfo: () -> Unit) {
+fun RepositoryItem(item: SearchItem?, navigateToUserInfo: () -> Unit) {
     Column {
         Row(
             modifier = Modifier
@@ -185,7 +207,7 @@ fun RepositoryItem(item: SearchItem, navigateToUserInfo: () -> Unit) {
                 }
         ) {
             AsyncImage(
-                model = item.image,
+                model = item?.image,
                 contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)
@@ -193,16 +215,20 @@ fun RepositoryItem(item: SearchItem, navigateToUserInfo: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(text = item.full_name ?: "", fontSize = 16.sp)
+                Text(text = item?.full_name ?: "", fontSize = 16.sp)
                 Text(
-                    text = item.description ?: "",
+                    text = item?.description ?: "",
                     fontSize = 10.sp,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
         }
-        HorizontalDivider(thickness = 1.dp, color = Color.DarkGray, modifier = Modifier.fillMaxWidth())
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = Color.DarkGray,
+            modifier = Modifier.fillMaxWidth()
+        )
 
     }
 
@@ -212,8 +238,7 @@ fun RepositoryItem(item: SearchItem, navigateToUserInfo: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 fun SetSearchBar(
     text: MutableState<String>,
-    active: MutableState<Boolean>,
-    listener: () -> Unit
+    active: MutableState<Boolean>
 ) {
 
     SearchBar(
@@ -223,7 +248,6 @@ fun SetSearchBar(
         },
         onSearch = {
             active.value = false
-            listener()
         },
         active = active.value,
         onActiveChange = {

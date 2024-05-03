@@ -3,14 +3,19 @@ package com.kashapovrush.search_repository_sreen.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.kashapovrush.network_api.usecases.GetUserUseCase
+import androidx.paging.PagingData
+import com.kashapovrush.network_api.entity.SearchItem
 import com.kashapovrush.network_api.usecases.SearchRepositoriesUseCase
 import com.kashapovrush.search_repository_sreen.ui.ScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 class SearchRepositoriesViewModel @Inject constructor(
@@ -22,17 +27,21 @@ class SearchRepositoriesViewModel @Inject constructor(
     private val _screenState = MutableLiveData<ScreenState>(ScreenState.Initial)
     val screenState: LiveData<ScreenState> = _screenState
 
-    suspend fun searchRepositories(query: String) {
-        scope.launch {
-            _screenState.postValue(ScreenState.Loading)
-            searchRepositoriesUseCase(query)
-                .catch {
-                    _screenState.postValue(ScreenState.Error(it.message))
-                }.collect {
-                    _screenState.postValue(ScreenState.ShowResult(it))
-                }
-        }
-    }
+
+    fun searchRepositories(query: String) = searchRepositoriesUseCase(query)
+
+
+//    suspend fun searchRepositories(query: String) {
+//        scope.launch {
+//            _screenState.postValue(ScreenState.Loading)
+//            searchRepositoriesUseCase(query)
+//                .catch {
+//                    _screenState.postValue(ScreenState.Error(it.message))
+//                }.collect {
+//                    _screenState.postValue(ScreenState.ShowResult(it))
+//                }
+//        }
+//    }
 
     override fun onCleared() {
         scope.cancel()
